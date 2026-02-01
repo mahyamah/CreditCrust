@@ -10,10 +10,12 @@ import Grocery from "./pages/Grocery";
 import Kitchen from "./pages/Kitchen";
 import TicTacToe from "./games/tictactoe/TicTacToe";
 import MemoryGame from "./games/MemoryGame/MemoryGame";
+import WhackACoin from "./games/WhackACoin/WhackACoin";
+import QuickMath from "./games/quickmath/QuickMath";
+
 
 import { GAMES } from "./data/gamesList";
 import { earnCoins } from "./logic/rules";
-import QuickMath from "./games/quickmath/QuickMath";
 
 export default function App() {
   const { state, setState, reset } = useGameState();
@@ -66,15 +68,32 @@ export default function App() {
 
           {/* --- MINI GAMES (Moved INSIDE page-wrapper) --- */}
 
-          {playing && gameId === "quickmath" && game && (
-              <QuickMath
+          {playing && gameId === "whack" && game && (
+              <WhackACoin
                   reward={game.reward}
-                  onFinish={async (numCorrect) => {
-                    const earned = Math.round((numCorrect / 5) * game.reward);
+                  onBack={() => setPage("games")}
+                  onFinish={async (earned) => {
                     setState(s => earnCoins(s, earned));
                     setPage("games");
+
+                    // Trigger Gemini Voice
                     setIsTyping(true);
-                    const msg = await getInnerVoiceAdvice(`Finished QuickMath and earned ${earned} coins!`, state);
+                    const msg = await getInnerVoiceAdvice(`I whacked enough coins to earn ${earned} gold!`, state);
+                    setAiMessage(msg);
+                    setIsTyping(false);
+                  }}
+              />
+          )}
+
+          {playing && gameId === "quickmath" && game && (
+              <QuickMath
+                  onBack={() => setPage("games")}
+                  onFinish={async (earned) => {
+                    setState(s => earnCoins(s, earned));
+                    setPage("games");
+
+                    setIsTyping(true);
+                    const msg = await getInnerVoiceAdvice(`I used my brain to solve math and earned ${earned} coins!`, state);
                     setAiMessage(msg);
                     setIsTyping(false);
                   }}

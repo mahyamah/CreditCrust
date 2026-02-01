@@ -1,0 +1,52 @@
+.whack-game-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: #2c3e50; display: flex; justify-content: center; align-items: center; z-index: 60;
+}
+
+.whack-game-container {
+    background: #ecf0f1; padding: 30px; border-radius: 20px; border: 6px solid #f1c40f;
+    text-align: center; width: 400px;
+}
+
+.whack-stats {
+    display: flex; justify-content: space-around; margin: 15px 0;
+}
+
+.stat-box {
+    background: #34495e; color: white; padding: 5px 15px; border-radius: 10px; font-weight: bold;
+}
+
+.whack-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px;
+}
+
+.whack-hole {
+    width: 90px; height: 90px; background: #7f8c8d; border-radius: 50%;
+    position: relative; overflow: hidden; border-bottom: 5px solid #333; cursor: pointer;
+}
+
+.whack-coin-sprite {
+    position: absolute; width: 100%; height: 100%; font-size: 45px;
+    display: flex; justify-content: center; align-items: center;
+    top: 100%; transition: top 0.1s ease-out; pointer-events: none;
+}
+
+.whack-coin-sprite.up { top: 0; }
+
+.whack-results-modal {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: white; padding: 25px; border-radius: 15px; border: 4px solid #27ae60;
+    box-shadow: 0 0 50px rgba(0,0,0,0.5); z-index: 70;
+}
+
+.collect-btn {
+    background: #27ae60; color: white; border: none; padding: 10px 20px;
+    border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px;
+}
+
+/* Universal Back Button */
+.game-exit-btn {
+    position: absolute; top: 20px; left: 20px; background: #e74c3c;
+    color: white; border: none; padding: 10px 15px; border-radius: 8px;
+    font-weight: bold; cursor: pointer; z-index: 100;
+}
