@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react"; // Added useEffect and useRef
+import { useState, useEffect, useRef } from "react";
 import { useGameState } from "./state/useGameState";
-import { getInnerVoiceAdvice } from "./logic/geminiService"; // Import Service
+import { getInnerVoiceAdvice } from "./logic/geminiService";
 
 import StatusBar from "./components/StatusBar";
 import PayCreditModal from "./components/PayCreditModal";
@@ -9,6 +9,7 @@ import GamesHub from "./pages/GamesHub";
 import Grocery from "./pages/Grocery";
 import Kitchen from "./pages/Kitchen";
 import TicTacToe from "./games/tictactoe/TicTacToe";
+import MemoryGame from "./games/MemoryGame/MemoryGame";
 
 import { GAMES } from "./data/gamesList";
 import { earnCoins } from "./logic/rules";
@@ -33,16 +34,11 @@ export default function App() {
       setIsTyping(false);
     };
 
-    // Trigger 1: Bought an ingredient (Inventory grew)
     if (state.inventory.length > prevState.current.inventory.length) {
       triggerAi("Bought a new pizza ingredient using credit!");
-    }
-    // Trigger 2: Paid Credit (Debt decreased)
-    else if (state.creditDebt < prevState.current.creditDebt) {
+    } else if (state.creditDebt < prevState.current.creditDebt) {
       triggerAi("Paid off some credit card debt!");
-    }
-    // Trigger 3: Maxed out Credit (Debt hit limit)
-    else if (state.creditDebt >= state.creditLimit && state.creditDebt > 0) {
+    } else if (state.creditDebt >= state.creditLimit && state.creditDebt > 0) {
       triggerAi("Our credit card is maxed out! We can't buy more until we pay it off.");
     }
 
@@ -58,10 +54,66 @@ export default function App() {
         <StatusBar state={state} onOpenPay={() => setPayOpen(true)} />
 
         <div className="page-wrapper">
-          {page === "home" && <Home setPage={setPage} />}
-          {page === "games" && <GamesHub state={state} setPage={setPage} />}
-          {page === "grocery" && <Grocery state={state} setState={setState} setPage={setPage} />}
-          {page === "kitchen" && <Kitchen state={state} setPage={setPage} />}
+          {/* Pages only show when NOT playing a mini-game */}
+          {!playing && (
+              <>
+                {page === "home" && <Home setPage={setPage} />}
+                {page === "games" && <GamesHub state={state} setPage={setPage} />}
+                {page === "grocery" && <Grocery state={state} setState={setState} setPage={setPage} />}
+                {page === "kitchen" && <Kitchen state={state} setPage={setPage} />}
+              </>
+          )}
+
+          {/* --- MINI GAMES (Moved INSIDE page-wrapper) --- */}
+
+          {playing && gameId === "quickmath" && game && (
+              <QuickMath
+                  reward={game.reward}
+                  onFinish={async (numCorrect) => {
+                    const earned = Math.round((numCorrect / 5) * game.reward);
+                    setState(s => earnCoins(s, earned));
+                    setPage("games");
+                    setIsTyping(true);
+                    const msg = await getInnerVoiceAdvice(`Finished QuickMath and earned ${earned} coins!`, state);
+                    setAiMessage(msg);
+                    setIsTyping(false);
+                  }}
+              />
+          )}
+
+          {/* Memory Game */}
+          {playing && gameId === "memory" && game && (
+              <MemoryGame
+                  reward={game.reward}
+                  onFinish={async (earned) => {
+                    setState(s => earnCoins(s, earned));
+                    setPage("games");
+
+                    setIsTyping(true);
+                    const msg = await getInnerVoiceAdvice(
+                        `I matched all the pizza ingredients in Memory Match and earned ${earned} coins!`,
+                        state
+                    );
+                    setAiMessage(msg);
+                    setIsTyping(false);
+                  }}
+              />
+          )}
+
+          {playing && gameId === "tictactoe" && game && (
+              <TicTacToe
+                  reward={game.reward}
+                  onFinish={async (moves, winner) => {
+                    let earned = winner === "X" ? game.reward : (winner === "Draw" ? Math.round(game.reward / 2) : 0);
+                    setState(s => earnCoins(s, earned));
+                    setPage("games");
+                    setIsTyping(true);
+                    const msg = await getInnerVoiceAdvice(winner === "X" ? "Won TicTacToe!" : "Played a tough game of TicTacToe!", state);
+                    setAiMessage(msg);
+                    setIsTyping(false);
+                  }}
+              />
+          )}
 
           {/* --- GEMINI UI BUBBLE --- */}
           <div className="inner-voice-container">
@@ -73,54 +125,12 @@ export default function App() {
         </div>
 
         {page === "final" && (
-            <div style={{ padding: 16 }}>
+            <div className="win-screen-overlay">
               <h2>Pizza Complete! 🎉🍕</h2>
               <p>Elle used credit responsibly and reached her goal.</p>
               <p><strong>Credit Score:</strong> {state.creditScore}</p>
               <button onClick={() => { setPage("home"); reset(); }}>Back to Home</button>
             </div>
-        )}
-
-        {playing && gameId === "quickmath" && game && (
-            <QuickMath
-                reward={game.reward}
-                onFinish={async (numCorrect) => { // Made async for Gemini
-                  const earned = Math.round((numCorrect / 5) * game.reward);
-                  setState(s => earnCoins(s, earned));
-                  setPage("games");
-
-                  // Trigger 4: Finished a game
-                  setIsTyping(true);
-                  const msg = await getInnerVoiceAdvice(`Finished a mini-game and earned ${earned} coins!`, state);
-                  setAiMessage(msg);
-                  setIsTyping(false);
-                }}
-            />
-        )}
-        {/* TIC TAC TOE GAME */}
-        {playing && gameId === "tictactoe" && game && (
-            <TicTacToe
-                reward={game.reward}
-                onFinish={async (moves, winner) => {
-                  let earned = 0;
-                  if (winner === "X") earned = game.reward; // Full reward for win
-                  else if (winner === "Draw") earned = Math.round(game.reward / 2); // Half for draw
-
-                  setState(s => earnCoins(s, earned));
-                  setPage("games");
-
-                  // Trigger Gemini Voice
-                  setIsTyping(true);
-                  const msg = await getInnerVoiceAdvice(
-                      winner === "X"
-                          ? `I just crushed the computer at Tic Tac Toe and earned ${earned} coins!`
-                          : `I played Tic Tac Toe but it was a ${winner}. I earned ${earned} coins.`,
-                      state
-                  );
-                  setAiMessage(msg);
-                  setIsTyping(false);
-                }}
-            />
         )}
 
         {payOpen && (
