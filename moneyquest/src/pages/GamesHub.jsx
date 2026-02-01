@@ -2,9 +2,9 @@ import { GAMES } from "../data/gamesList";
 
 export default function GamesHub({ state, setPage }) {
   return (
-    <div style={{ padding: 16 }}>
-      <h2>Games</h2>
-      <p>Play mini-games to earn coins (coins are only for paying credit).</p>
+    <div className="page-game" style={{ padding: 16 }}>
+      <h2 className="title">Games</h2>
+      <p className="subtitle" style={{color:"black"}}>Play mini-games to earn coins (coins are only for paying credit).</p>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginTop: 12 }}>
         {GAMES.map((g, i) => {

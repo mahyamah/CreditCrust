@@ -103,7 +103,7 @@ export default function Grocery({ state, setState, setPage }) {
   return (
     <div className="page page-grocery grocery-page">
        <h2 className="grocery-title">Grocery Store 🛒</h2>
-        <p className="grocery-subtitle">Ingredients can only be bought with credit.</p>
+        <p className="subtitle">Ingredients can only be bought with credit.</p>
 
       {/* The “wall” panel */}
       <section className="grocery-panel">

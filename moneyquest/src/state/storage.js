@@ -1,4 +1,4 @@
-const KEY = "moneyquest_state_v2";
+const KEY = "moneyquest_state_v3";
 
 export function loadState(fallback) {
   try {
